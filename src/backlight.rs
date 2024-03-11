@@ -34,7 +34,7 @@ pub struct Color {
     pub(crate) blue: u8,
 }
 
-pub struct Config {
+pub struct LEDFile {
     file: File,
 }
 
@@ -62,7 +62,7 @@ impl Display for Speed {
     }
 }
 
-impl Config {
+impl LEDFile {
     pub fn new() -> Self {
         Self {
             file: File::options().read(false).write(true).open(PATH).expect("Failed to open file")
