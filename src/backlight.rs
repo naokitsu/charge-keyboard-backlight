@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{Seek, Write};
 
-const PATH: &str = "/sys/devices/platform/asus-nb-wmi/leds/asus::kbd_backlight/kbd_rgb_mode";
+const PATH: &str = "/sys/class/leds/asus::kbd_backlight/kbd_rgb_mode";
 
 
 #[derive(Debug, Clone, Copy)]

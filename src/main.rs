@@ -1,8 +1,9 @@
-use crate::config::{Color, Config, Payload, Mode};
+use crate::backlight::{Color, Config, Payload, Mode};
 
-mod config;
+mod backlight;
+mod battery;
 
 fn main() {
     let mut config = Config::new();
-    config.load( Payload { mode: Mode::Static(Color { red: 125, green: 0, blue: 30 }), save: true }).unwrap();
+    config.load( Payload { mode: Mode::Static(Color { red: 125, green: 0, blue: 100 }), save: true }).unwrap();
 }
