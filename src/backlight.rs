@@ -77,7 +77,7 @@ impl LEDFile {
     pub fn new() -> Self {
         let handle = unsafe {
             winapi::um::fileapi::CreateFileW(
-                b"\\\0\\\0.\0\\\0A\0T\0K\0A\0C\0P\0I\0".as_ptr() as *const u16,
+                b"\\\0\\\0.\0\\\0A\0T\0K\0A\0C\0P\0I\0\0".as_ptr() as *const u16,
                 0x4000_0000 | 0x8000_0000, // Generic write & read
                 2 | 1, // Share write and read
                 &mut winapi::um::minwinbase::SECURITY_ATTRIBUTES {
