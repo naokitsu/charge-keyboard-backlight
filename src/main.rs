@@ -1,24 +1,60 @@
+use std::cmp::{max, min};
+use std::ops::Rem;
 use std::thread::sleep;
 use std::time::Duration;
-use crate::backlight::{Color, LEDFile, Payload, Mode};
+use crate::backlight::{Color, LEDFile, Payload, Mode, Speed};
 
 mod backlight;
 mod battery;
 
+fn color_from_hsv(hue: f32, saturation: f32, value: f32) -> Color {
+    let k = |n, h: f32| {
+        (n as f32 + h / 60.0).rem(6.0)
+    };
+
+    let f = |n, h, s, v| {
+        let k = k(n, h);
+
+        let min_of_min = k.min(4.0 - k).min(1.0);
+
+        let res = v - v * s * min_of_min.max(0.0);
+        res * 255.0
+    };
+
+    Color {
+        red: f(5, hue, saturation, value) as u8,
+        green: f(3, hue, saturation, value) as u8,
+        blue: f(1, hue, saturation, value) as u8,
+    }
+}
+
 fn main() {
+    let saturation = 0.8;
+    let value = 1.0;
+
     let mut status = battery::Status::get();
     let mut config = LEDFile::new();
-    let payload =  Payload { mode: Mode::Static(Color { red: 255, green: 64, blue: 128 }), save: false };
-    let payload_charging =  Payload { mode: Mode::Static(Color { red: 32, green: 160, blue: 255 }), save: false };
+    let charging_color = color_from_hsv(186.0, saturation, value);
+    let charged_hue = 150.0;
+
+
     loop {
+        // (status.charge as u32 * charged_hue / 255)1
         if status.online {
-            config.load(payload_charging)
+            config.load(Payload {
+                mode: Mode::Static(charging_color),
+                save: false
+            })
         } else {
-            config.load(payload)
+            config.load(Payload {
+                mode: Mode::Static(color_from_hsv(((status.charge as f32) * charged_hue) / 255.0, saturation, value)),
+                save: false
+            })
         }
             .expect("Failed to load payload");
 
         status.update();
+
         sleep(Duration::from_millis(500));
     }
     println!("Bye!");

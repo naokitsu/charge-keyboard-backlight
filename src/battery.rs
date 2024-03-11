@@ -73,6 +73,7 @@ impl Status {
     pub fn update(&mut self) -> &mut Self {
         let current_charge = Self::read_battery(NOW_PATH);
         self.charge = (current_charge / self.max_charge_divided_by_255) as u8;
+
         self.online = Self::online();
         self
     }
