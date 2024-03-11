@@ -18,7 +18,7 @@ const NOW_PATH: &str = concatcp!(PATH, BAT, NOW);
 pub struct Status {
     pub online: bool,
     pub charge: u8,
-    max_charge_divided_by_255: u32
+    max_charge: u32
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -117,8 +117,8 @@ impl Status {
 
         Ok(Status {
             online,
-            charge: ((current_charge * 255) / max_charge) as u8,
-            max_charge_divided_by_255: max_charge / 255
+            charge: (current_charge * 255 / max_charge) as u8,
+            max_charge
         })
     }
 
@@ -127,9 +127,11 @@ impl Status {
             let current_charge = Self::read_battery(NOW_PATH)?;
         #[cfg(target_os = "windows")]
             let current_charge = Self::read_battery()?;
-        self.charge = (current_charge / self.max_charge_divided_by_255) as u8;
-
+        //self.charge = (current_charge * 255 / self.max_charge) as u8;
         self.online = Self::online()?;
+        self.charge = self.charge.wrapping_sub(1);
+
+
         Ok(self)
     }
 }

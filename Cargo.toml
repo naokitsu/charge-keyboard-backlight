@@ -9,4 +9,4 @@ edition = "2021"
 const_format = "0.2.32"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3.9", features = ["winbase"] }
+winapi = { version = "0.3.9", features = ["winbase", "fileapi", "minwinbase", "ioapiset"] }
