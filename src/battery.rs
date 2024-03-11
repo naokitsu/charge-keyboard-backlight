@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 use const_format::concatcp;
+use winapi::um::winbase::LPSYSTEM_POWER_STATUS;
 
 const PATH: &str = "/sys/class/power_supply/";
 const ACAD: &str = "ACAD/";
@@ -27,6 +28,7 @@ pub enum Error {
 }
 
 impl Status {
+    #[cfg(target_os = "linux")]
     fn online() -> Result<bool, Error> {
         let mut online = File::options()
             .read(true)
@@ -43,6 +45,25 @@ impl Status {
         }
     }
 
+    #[cfg(target_os = "windows")]
+    fn online() -> Result<bool, Error> {
+        let mut status = winapi::um::winbase::SYSTEM_POWER_STATUS {
+            ACLineStatus: 0,
+            BatteryFlag: 0,
+            BatteryLifePercent: 0,
+            Reserved1: 0,
+            BatteryLifeTime: 0,
+            BatteryFullLifeTime: 0,
+        };
+        unsafe {
+            if winapi::um::winbase::GetSystemPowerStatus(&mut status) == 0 {
+                return Err(Error::CouldntRead)
+            }
+        }
+        Ok(status.ACLineStatus == 1)
+    }
+
+    #[cfg(target_os = "linux")]
     fn read_battery(path: &str) -> Result<u32, Error> {
         let mut file = File::options()
             .read(true)
@@ -65,11 +86,34 @@ impl Status {
         Ok(res)
     }
 
+    #[cfg(target_os = "windows")]
+    fn read_battery() -> Result<u32, Error> {
+        let mut status = winapi::um::winbase::SYSTEM_POWER_STATUS {
+            ACLineStatus: 0,
+            BatteryFlag: 0,
+            BatteryLifePercent: 0,
+            Reserved1: 0,
+            BatteryLifeTime: 0,
+            BatteryFullLifeTime: 0,
+        };
+        unsafe {
+            if winapi::um::winbase::GetSystemPowerStatus(&mut status) == 0 {
+                return Err(Error::CouldntRead)
+            }
+        }
+        Ok(status.BatteryLifePercent as u32)
+    }
 
     pub fn get() -> Result<Self, Error> {
         let online = Self::online()?;
-        let max_charge = Self::read_battery(FULL_PATH)?;
-        let current_charge = Self::read_battery(NOW_PATH)?;
+        #[cfg(target_os = "linux")]
+            let max_charge = Self::read_battery(FULL_PATH)?;
+        #[cfg(target_os = "linux")]
+            let current_charge = Self::read_battery(NOW_PATH)?;
+        #[cfg(target_os = "windows")]
+            let max_charge = 100;
+        #[cfg(target_os = "windows")]
+            let current_charge = Self::read_battery()?;
 
         Ok(Status {
             online,
@@ -79,7 +123,10 @@ impl Status {
     }
 
     pub fn update(&mut self) -> Result<&mut Self, Error> {
-        let current_charge = Self::read_battery(NOW_PATH)?;
+        #[cfg(target_os = "linux")]
+            let current_charge = Self::read_battery(NOW_PATH)?;
+        #[cfg(target_os = "windows")]
+            let current_charge = Self::read_battery()?;
         self.charge = (current_charge / self.max_charge_divided_by_255) as u8;
 
         self.online = Self::online()?;
