@@ -20,61 +20,69 @@ pub struct Status {
     max_charge_divided_by_255: u32
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum Error {
+    CouldntParse,
+    CouldntRead
+}
 
 impl Status {
-    fn online() -> bool {
+    fn online() -> Result<bool, Error> {
         let mut online = File::options()
             .read(true)
             .write(false)
             .open(ONLINE_PATH)
-            .expect("Failed to open current ACAD state");
+            .map_err(|_| Error::CouldntRead)?;
         let mut buf = [0u8; 1];
         online.read_exact(&mut buf)
-            .expect("Failed to read current ACAD state");
+            .map_err(|_| Error::CouldntRead)?;;
         if buf[0] == b'1' {
-            true
+            Ok(true)
         } else {
-            false
+            Ok(false)
         }
     }
 
-    fn read_battery(path: &str) -> u32 {
+    fn read_battery(path: &str) -> Result<u32, Error> {
         let mut file = File::options()
             .read(true)
             .write(false)
             .open(path)
-            .expect("Failed to read battery");
+            .map_err(|_| Error::CouldntRead)?;;
         let mut buf= [0u8; 16];
         file.read(& mut buf)
-            .expect("Failed to read battery");
+            .map_err(|_| Error::CouldntRead)?;;
         let string = String::from_utf8_lossy(&buf);
 
-        string
+        let res = string
             .split("\n")
             .next()
             .map(|x| x.parse::<u32>())
-            .expect("Failed to parse battery value")
-            .expect("Failed to parse battery value")
+            .transpose()
+            .map_err(|x| Error::CouldntParse)?
+            .ok_or(Error::CouldntParse)?;
+
+        Ok(res)
     }
 
 
-    pub fn get() -> Self {
-        let online = Self::online();
-        let max_charge = Self::read_battery(FULL_PATH);
-        let current_charge = Self::read_battery(NOW_PATH);
+    pub fn get() -> Result<Self, Error> {
+        let online = Self::online()?;
+        let max_charge = Self::read_battery(FULL_PATH)?;
+        let current_charge = Self::read_battery(NOW_PATH)?;
 
-        Status {
+        Ok(Status {
             online,
             charge: ((current_charge * 255) / max_charge) as u8,
             max_charge_divided_by_255: max_charge / 255
-        }
+        })
     }
 
-    pub fn update(&mut self) -> &mut Self {
-        let current_charge = Self::read_battery(NOW_PATH);
+    pub fn update(&mut self) -> Result<&mut Self, Error> {
+        let current_charge = Self::read_battery(NOW_PATH)?;
         self.charge = (current_charge / self.max_charge_divided_by_255) as u8;
 
-        self.online = Self::online();
-        self
+        self.online = Self::online()?;
+        Ok(self)
     }
 }

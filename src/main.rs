@@ -31,7 +31,7 @@ fn main() {
     let saturation = 0.8;
     let value = 1.0;
 
-    let mut status = battery::Status::get();
+    let mut status = battery::Status::get().expect("Couldn't get battery status");
     let mut config = LEDFile::new();
     let charging_color = color_from_hsv(186.0, saturation, value);
     let charged_hue = 150.0;
@@ -52,6 +52,6 @@ fn main() {
 
         status.update();
 
-        sleep(Duration::from_millis(500));
+        sleep(Duration::from_millis(1000));
     }
 }
