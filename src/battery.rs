@@ -127,10 +127,8 @@ impl Status {
             let current_charge = Self::read_battery(NOW_PATH)?;
         #[cfg(target_os = "windows")]
             let current_charge = Self::read_battery()?;
-        //self.charge = (current_charge * 255 / self.max_charge) as u8;
+        self.charge = (current_charge * 255 / self.max_charge) as u8;
         self.online = Self::online()?;
-        self.charge = self.charge.wrapping_sub(1);
-
 
         Ok(self)
     }
