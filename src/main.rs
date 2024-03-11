@@ -1,8 +1,7 @@
-use std::cmp::{max, min};
 use std::ops::Rem;
 use std::thread::sleep;
 use std::time::Duration;
-use crate::backlight::{Color, LEDFile, Payload, Mode, Speed};
+use crate::backlight::{Color, LEDFile, Payload, Mode};
 
 mod backlight;
 mod battery;
@@ -37,9 +36,7 @@ fn main() {
     let charging_color = color_from_hsv(186.0, saturation, value);
     let charged_hue = 150.0;
 
-
     loop {
-        // (status.charge as u32 * charged_hue / 255)1
         if status.online {
             config.load(Payload {
                 mode: Mode::Static(charging_color),
@@ -57,5 +54,4 @@ fn main() {
 
         sleep(Duration::from_millis(500));
     }
-    println!("Bye!");
 }

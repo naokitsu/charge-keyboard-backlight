@@ -1,4 +1,4 @@
-use std::fs::{File, read};
+use std::fs::File;
 use std::io::Read;
 use const_format::concatcp;
 
@@ -29,7 +29,7 @@ impl Status {
             .open(ONLINE_PATH)
             .expect("Failed to open current ACAD state");
         let mut buf = [0u8; 1];
-        let online = online.read_exact(&mut buf)
+        online.read_exact(&mut buf)
             .expect("Failed to read current ACAD state");
         if buf[0] == b'1' {
             true

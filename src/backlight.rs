@@ -70,7 +70,7 @@ impl LEDFile {
     }
 
     pub(crate) fn load(&mut self, payload: Payload) -> std::io::Result<()> {
-        self.file.write(payload.to_string().as_bytes())?;;
+        self.file.write(payload.to_string().as_bytes())?;
         self.file.flush()?;
         self.file.rewind()?;
         Ok(())
